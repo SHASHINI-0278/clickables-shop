@@ -13,12 +13,9 @@ function App() {
 
   // --- LOCAL STORAGE ---
   useEffect(() => {
-    // 1. Load Cart
     const savedCart = JSON.parse(localStorage.getItem('lifestyle-cart'));
-    if (savedCart) setCart(savedCart);
-
-    // 2. Load Session (Keep user logged in if they refresh)
     const savedSession = JSON.parse(localStorage.getItem('lifestyle-session'));
+    if (savedCart) setCart(savedCart);
     if (savedSession) setUser(savedSession);
   }, []);
 
@@ -27,78 +24,78 @@ function App() {
   }, [cart]);
 
   // --- HANDLERS ---
-
-  // *** NEW SMART LOGIN LOGIC ***
   const handleLogin = (e) => {
     e.preventDefault();
     const email = e.target.email.value;
     const password = e.target.password.value;
-
-    // 1. Get the "Database" of all users from Local Storage
     const usersDB = JSON.parse(localStorage.getItem('lifestyle-users-db')) || {};
 
     if (usersDB[email]) {
-      // CASE A: User ALREADY exists. Check Password.
       if (usersDB[email].password === password) {
-        setUser(usersDB[email]); // Login Success
-        localStorage.setItem('lifestyle-session', JSON.stringify(usersDB[email])); // Save session
+        setUser(usersDB[email]); 
+        localStorage.setItem('lifestyle-session', JSON.stringify(usersDB[email])); 
         alert("Welcome back!");
       } else {
-        // Login Failed
-        alert("Incorrect Password! Please try again.");
+        alert("Incorrect Password!");
       }
     } else {
-      // CASE B: New User. Create Account (Register).
       const newUser = { 
         email: email, 
-        password: password, // Save the password they just typed
+        password: password, 
         name: email.split('@')[0],
         phone: "",
         bio: "New Member",
         city: ""
       };
-      
-      // Save to "Database"
       usersDB[email] = newUser;
       localStorage.setItem('lifestyle-users-db', JSON.stringify(usersDB));
-      
-      // Log them in
       setUser(newUser);
       localStorage.setItem('lifestyle-session', JSON.stringify(newUser));
-      alert("Account created successfully! Password set.");
+      alert("Account created successfully!");
     }
   };
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.removeItem('lifestyle-session'); // Clear session
+    localStorage.removeItem('lifestyle-session');
     setView('home');
   };
 
-  // *** UPDATED PROFILE LOGIC ***
   const updateUser = (updatedDetails) => {
-    // 1. Merge old data with new data
     const newUser = { ...user, ...updatedDetails };
-    
-    // 2. Update Current State
     setUser(newUser); 
     localStorage.setItem('lifestyle-session', JSON.stringify(newUser));
-
-    // 3. Update the "Database" so it remembers next time
     const usersDB = JSON.parse(localStorage.getItem('lifestyle-users-db')) || {};
-    usersDB[newUser.email] = newUser; // Update this specific user
+    usersDB[newUser.email] = newUser;
     localStorage.setItem('lifestyle-users-db', JSON.stringify(usersDB));
-
     alert("Profile Updated Successfully!");
   };
 
+  // --- CART LOGIC ---
+  
+  // 1. Add Item (Removed Alert to make clicking "+" smoother)
   const addToCart = (product) => {
     setCart([...cart, product]);
-    alert(`${product.name} added to cart!`);
   };
 
+  // 2. Remove ONE instance of an item (for the "-" button)
+  const decrementItem = (product) => {
+    const index = cart.findIndex(item => item.id === product.id);
+    if (index !== -1) {
+      const newCart = [...cart];
+      newCart.splice(index, 1); // Remove only that one item
+      setCart(newCart);
+    }
+  };
+
+  // 3. Remove ALL instances (for the Cart page "X" button)
   const removeFromCart = (indexToRemove) => {
     setCart(cart.filter((_, index) => index !== indexToRemove));
+  };
+
+  // 4. Helper to count how many of THIS product are in cart
+  const getProductQuantity = (productId) => {
+    return cart.filter(item => item.id === productId).length;
   };
 
   const detectLocation = () => {
@@ -115,7 +112,6 @@ function App() {
     }
   };
 
-  // --- RENDER ---
   if (!user) return <Login handleLogin={handleLogin} />;
 
   return (
@@ -140,21 +136,51 @@ function App() {
             </div>
 
             <div className="row">
-              {PRODUCTS.map((prod) => (
-                <div key={prod.id} className="col-md-3 mb-4">
-                  <div className="card h-100 border-0 shadow-sm">
-                    <img src={prod.img} className="card-img-top rounded-top" alt={prod.name} />
-                    <div className="card-body">
-                      <h6 className="card-subtitle mb-2 text-muted text-uppercase" style={{fontSize: '0.8rem'}}>{prod.category}</h6>
-                      <h5 className="card-title">{prod.name}</h5>
-                      <h5 className="card-text text-primary fw-bold">₹{prod.price}</h5>
-                      <button onClick={() => addToCart(prod)} className="btn btn-dark w-100 mt-2">
-                        Add to Cart
-                      </button>
+              {PRODUCTS.map((prod) => {
+                // Calculate quantity for THIS specific product
+                const qty = getProductQuantity(prod.id);
+                
+                return (
+                  <div key={prod.id} className="col-md-3 mb-4">
+                    <div className="card h-100 border-0 shadow-sm">
+                      <img src={prod.img} className="card-img-top rounded-top" alt={prod.name} />
+                      <div className="card-body">
+                        <h6 className="card-subtitle mb-2 text-muted text-uppercase" style={{fontSize: '0.8rem'}}>{prod.category}</h6>
+                        <h5 className="card-title">{prod.name}</h5>
+                        <h5 className="card-text text-primary fw-bold">₹{prod.price}</h5>
+                        
+                        {/* --- NEW CONDITIONAL BUTTONS --- */}
+                        {qty === 0 ? (
+                          // Case A: Not in cart yet -> Show Add Button
+                          <button onClick={() => addToCart(prod)} className="btn btn-dark w-100 mt-2">
+                            Add to Cart
+                          </button>
+                        ) : (
+                          // Case B: Already in cart -> Show Counter
+                          <div className="d-flex justify-content-between align-items-center mt-2">
+                            <button 
+                              onClick={() => decrementItem(prod)} 
+                              className="btn btn-outline-danger btn-sm" 
+                              style={{width: '30%'}}
+                            >
+                              -
+                            </button>
+                            <span className="fw-bold">{qty}</span>
+                            <button 
+                              onClick={() => addToCart(prod)} 
+                              className="btn btn-success btn-sm" 
+                              style={{width: '30%'}}
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
