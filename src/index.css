@@ -1,0 +1,51 @@
+/* --- GLOBAL THEME VARIABLES --- */
+:root {
+  /* Page Background - Sand Dollar */
+  --bg-color: #DECDBE;
+  
+  /* Headlines/Banners - Mocha Mousse */
+  --brand-primary: #A47864;
+  
+  /* Text - Phantom */
+  --text-main: #39373B;
+  
+  /* Buttons - Slate/Cameo Blue */
+  --action-btn: #769DA6;
+}
+
+/* 1. Apply Page Background & Text Color */
+body {
+  background-color: var(--bg-color) !important;
+  color: var(--text-main) !important;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* 2. Override Headlines & Brand Name */
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+  color: var(--brand-primary) !important;
+}
+
+/* 3. Override Primary Buttons (Add to Cart) */
+.btn-primary, .btn-dark {
+  background-color: var(--action-btn) !important;
+  border-color: var(--action-btn) !important;
+  color: white !important;
+}
+
+/* 4. Hover Effects for Buttons */
+.btn-primary:hover, .btn-dark:hover {
+  background-color: var(--brand-primary) !important; /* Turns Mocha on hover */
+  border-color: var(--brand-primary) !important;
+}
+
+/* 5. Custom Card Styling (To make them pop against Sand Dollar) */
+.card {
+  border: none !important;
+  box-shadow: 0 4px 6px rgba(57, 55, 59, 0.1) !important; /* Shadow using Phantom color */
+}
+
+/* 6. Navbar Tweaks */
+.navbar {
+  background-color: white !important; /* Keep navbar clean */
+  border-bottom: 3px solid var(--brand-primary); /* Add a Mocha Mousse border */
+}
